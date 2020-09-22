@@ -107,8 +107,8 @@ class Agent():
         self.critic_1.optimizer.zero_grad()
         self.critic_2.optimizer.zero_grad()
 
-        q1_loss = F.mse_loss(q1, target)
-        q2_loss = F.mse_loss(q2, target)
+        q1_loss = F.mse_loss(target, q1)
+        q2_loss = F.mse_loss(target, q2)
         critic_loss = q1_loss + q2_loss
         critic_loss.backward()
         self.critic_1.optimizer.step()
@@ -134,8 +134,8 @@ class Agent():
         critic_1_params = self.critic_1.named_parameters()
         critic_2_params = self.critic_2.named_parameters()
         target_actor_params = self.target_actor.named_parameters()
-        target_critic_1_params = self.target_critic_2.named_parameters()
-        target_critic_2_params = self.target_critic_1.named_parameters()
+        target_critic_1_params = self.target_critic_1.named_parameters()
+        target_critic_2_params = self.target_critic_2.named_parameters()
 
         critic_1_state_dict = dict(critic_1_params)
         critic_2_state_dict = dict(critic_2_params)
