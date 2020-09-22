@@ -10,7 +10,7 @@ if __name__ == '__main__':
                   input_dims=env.observation_space.shape,
                   tau=0.005, env=env, batch_size=100, layer1_size=400,
                   layer2_size=300, n_actions=env.action_space.shape[0])
-    n_games = 2
+    n_games = 1500
     filename = 'Walker2d_' + str(n_games) + '.png'
     figurefile = 'plots/' + filename
 

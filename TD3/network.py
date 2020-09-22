@@ -28,7 +28,7 @@ class CriticNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
 
         if T.cuda.is_available():
-            self.device = T.device('cuda:0')
+            self.device = T.device('cuda:11')
         else:
             self.device = T.device('cpu')
         self.to(self.device)
@@ -71,7 +71,7 @@ class ActorNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
 
         if T.cuda.is_available():
-            self.device = T.device('cuda:0')
+            self.device = T.device('cuda:11')
         else:
             self.device = T.device('cpu')
 
