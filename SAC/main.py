@@ -3,17 +3,17 @@ import gym
 import numpy as np
 from agent import Agent
 from utils import plot_learning_curve
-
+import gym_cartpole_swingup
 
 if __name__ == '__main__':
-    env_id = 'InvertedPendulumBulletEnv-v0'
+    env_id = 'CartPoleSwingUp-v0'
     env = gym.make(env_id)
     agent = Agent(alpha=0.0003, beta=0.0003, reward_scale=2,
                   env_id=env_id, input_dims=env.observation_space.shape,
                   tau=0.005, env=env, batch_size=256, layer_1_size=256,
                   layer_2_size=256, n_actions=env.action_space.shape[0])
 
-    n_games = 250
+    n_games = 800
     filename = env_id + '_' + str(n_games) + 'games_scale' + '_' + \
         str(agent.scale) + '.png'
     figure_file = 'plots/' + filename
