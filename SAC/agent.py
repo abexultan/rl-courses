@@ -20,7 +20,7 @@ class Agent():
         self.scale = reward_scale
         self.actor = ActorNetwork(alpha, input_dims, layer_1_size,
                                   layer_2_size, n_actions=n_actions,
-                                  name=env_id+'_actor',
+                                  name=env_id + '_actor',
                                   max_action=env.action_space.high)
 
         self.critic_1 = CriticNetwork(beta, input_dims, layer_1_size,

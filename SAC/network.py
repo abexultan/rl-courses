@@ -44,7 +44,7 @@ class CriticNetwork(nn.Module):
         T.save(self.state_dict(), self.chckpt_file)
 
     def load_checkpoint(self):
-        self.load_state_dict(T.load(self.chckpt_file))
+        self.load_state_dict(T.load(self.chckpt_file, map_location='cuda:0'))
 
 
 class ActorNetwork(nn.Module):
@@ -108,7 +108,7 @@ class ActorNetwork(nn.Module):
         T.save(self.state_dict(), self.chckpt_file)
 
     def load_checkpoint(self):
-        self.load_state_dict(T.load(self.chckpt_file))
+        self.load_state_dict(T.load(self.chckpt_file, map_location='cuda:0'))
 
 
 class ValueNetwork(nn.Module):
@@ -149,4 +149,4 @@ class ValueNetwork(nn.Module):
         T.save(self.state_dict(), self.chckpt_file)
 
     def load_checkpoint(self):
-        self.load_state_dict(T.load(self.chckpt_file))
+        self.load_state_dict(T.load(self.chckpt_file, map_location='cuda:0'))
