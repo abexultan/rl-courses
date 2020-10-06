@@ -63,7 +63,7 @@ class CartPoleEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self):
+    def __init__(self, theta_desired=0, pos_desired=0):
         self.gravity = 9.8
         self.masscart = 1.0
         self.masspole = 0.1
@@ -96,6 +96,9 @@ class CartPoleEnv(gym.Env):
         self.state = None
 
         self.steps_beyond_done = None
+        
+        self.theta_desired = theta_desired
+        self.pos_desired = pos_desired
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -137,11 +140,11 @@ class CartPoleEnv(gym.Env):
         )
 
         if not done:
-            reward = 1.0
+            reward = np.exp(-(theta-self.theta_desired)**2)
         elif self.steps_beyond_done is None:
             # Pole just fell!
             self.steps_beyond_done = 0
-            reward = 1.0
+            reward = np.exp(-(theta-self.theta_desired)**2)
         else:
             if self.steps_beyond_done == 0:
                 logger.warn(
