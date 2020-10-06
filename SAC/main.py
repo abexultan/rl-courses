@@ -20,16 +20,16 @@ if __name__ == '__main__':
 
     best_score = env.reward_range[0]
     score_history = []
-    load_checkpoint = False
+    load_checkpoint = True
     thetas = []
 
     if load_checkpoint:
         agent.load_models()
-    steps = 0
-
+    
     angle = []
 
     for i in range(n_games):
+        steps = 0
         score = 0
         done = False
         observation = env.reset()

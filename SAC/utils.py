@@ -10,3 +10,16 @@ def plot_learning_curve(x, scores, figure_file):
     plt.plot(x, running_avg)
     plt.title('Running average of previous 100 scores')
     plt.savefig(figure_file)
+
+
+def plot_thetas(steps, thetas):
+    print("Inside plot thetas")
+    sin_theta, theta_dot = map(list, zip(*thetas))
+    plt.figure()
+    plt.plot(steps, sin_theta)
+    plt.title("Sinus of thetas vs Timestamps")
+    plt.savefig("plots/sin_theta.png")
+    plt.figure()
+    plt.plot(steps, theta_dot)
+    plt.title("Theta dot vs Timestamps")
+    plt.savefig("plots/theta_dot.png")
