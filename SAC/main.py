@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == '__main__':
-    env_id = 'CustomCurtpoleEnv_expreward'
+    env_id = 'CustomCurtpoleEnv_expreward_1e-2threshold'
     env = CartPoleEnv()
     agent = Agent(alpha=0.0003, beta=0.0003, reward_scale=2,
-                  env_id=env_id + "modified", input_dims=env.observation_space.shape,
+                  env_id=env_id, input_dims=env.observation_space.shape,
                   tau=0.005, env=env, batch_size=256, layer_1_size=256,
                   layer_2_size=256, n_actions=env.action_space.shape[0])
 
@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     best_score = env.reward_range[0]
     score_history = []
-    load_checkpoint = True
+    load_checkpoint = False
     thetas = []
 
     if load_checkpoint:
