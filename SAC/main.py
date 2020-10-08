@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == '__main__':
-    env_id = 'CustomCurtpoleEnv_expreward_1e-2threshold'
+    env_id = 'CustomCurtpoleEnv_expreward_5e-2threshold'
     env = CartPoleEnv()
     agent = Agent(alpha=0.0003, beta=0.0003, reward_scale=2,
                   env_id=env_id, input_dims=env.observation_space.shape,
@@ -38,6 +38,10 @@ if __name__ == '__main__':
             action = agent.choose_action(observation)
             observation_, reward, done, info = env.step(action)
             steps += 1
+            if steps == 5000:
+                done = True
+                reward = 0
+
             score += reward
 
             if not load_checkpoint:
@@ -48,8 +52,6 @@ if __name__ == '__main__':
 
             observation = observation_
             
-            if steps > 10000:
-                break
             
         score_history.append(score)
         avg = np.mean(score_history[-100:])
