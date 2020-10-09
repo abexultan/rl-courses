@@ -1,13 +1,13 @@
 import numpy as np
 from agent import Agent
-import time
-from cartpole import CartPoleEnv
+# import time
+from cartpole import CartPoleEnv, CartPoleEnvPos
 import matplotlib.pyplot as plt
 
 
 if __name__ == '__main__':
-    env_id = 'CustomCurtpoleEnv_expreward_5e-2threshold'
-    env = CartPoleEnv()
+    env_id = 'CustomCurtpoleEnv_expreward_pos_5e-2threshold'
+    env = CartPoleEnvPos(mode='train')
     agent = Agent(alpha=0.0003, beta=0.0003, reward_scale=2,
                   env_id=env_id, input_dims=env.observation_space.shape,
                   tau=0.005, env=env, batch_size=256, layer_1_size=256,
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     
     angle = []
 
-    for i in range(n_games):
+    for i in range(n_games):  
         steps = 0
         score = 0
         done = False
@@ -38,7 +38,7 @@ if __name__ == '__main__':
             action = agent.choose_action(observation)
             observation_, reward, done, info = env.step(action)
             steps += 1
-            if steps == 5000:
+            if steps == 10000:
                 done = True
                 reward = 0
 
@@ -51,7 +51,6 @@ if __name__ == '__main__':
                 env.render()
 
             observation = observation_
-            
             
         score_history.append(score)
         avg = np.mean(score_history[-100:])
