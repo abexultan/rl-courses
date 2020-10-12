@@ -279,11 +279,15 @@ class CartPoleEnvPos(CartPoleEnv):
         )
 
         if not done:
-            reward = np.exp(-(theta-self.theta_desired)**2-x_error**2)
+            # reward = np.exp(-((theta-self.theta_desired)**2
+            #                   + (x_error**2)))
+            reward = np.exp(-(x_error**2))
         elif self.steps_beyond_done is None:
             # Pole just fell!
             self.steps_beyond_done = 0
-            reward = np.exp(-(theta-self.theta_desired)**2-x_error**2)
+            # reward = np.exp(-((theta-self.theta_desired)**2
+            #                   + (x_error**2)))
+            reward = np.exp(-(x_error**2))
         else:
             if self.steps_beyond_done == 0:
                 logger.warn(
@@ -351,7 +355,6 @@ class CartPoleEnvPos(CartPoleEnv):
             pos_des_in_world = self.pos_desired * scale + screen_width / 2.0
             self.pos_flag = rendering.Line((pos_des_in_world, carty),
                                            (pos_des_in_world, 2*carty))
-            print(self.pos_desired*scale)
             self.viewer.add_geom(self.pos_flag)
 
             self._pole_geom = pole
@@ -375,11 +378,18 @@ class CartPoleEnvPos(CartPoleEnv):
 
 
 if __name__ == "__main__":
-
-    env = CartPoleEnv()
+    import time
+    
+    env = CartPoleEnvPos(mode='train')
     observation = env.reset()
+    counter = 0
     while True:
         action = env.action_space.sample()
         observation_, _, _, _ = env.step(action)
-        print(env.pos_desired - observation_[0])
+        if (counter + 1) % 500 == 0:
+            print(f'Flag position = {env.pos_desired}')
+            print(f'Carts position = {env.pos_desired - observation_[0]}')
+            print(f'Position difference = {observation_[0]}')
+            counter = 0
         env.render()
+        counter += 1
