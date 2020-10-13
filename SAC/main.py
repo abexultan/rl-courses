@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == '__main__':
-    env_id = 'CustomCurtpoleEnv_expreward_pos_5e-2threshold'
+    env_id = 'CustomCurtpoleEnv_exp_reward_simple'
     env = CartPoleEnvPos(mode='train')
     agent = Agent(alpha=0.0003, beta=0.0003, reward_scale=2,
                   env_id=env_id, input_dims=env.observation_space.shape,
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     if load_checkpoint:
         plt.plot(angle, label='pole angle')
-        plt.plot(np.zeros((len(angle),1)),'r--', label='0 radian')
+        plt.plot(np.zeros((len(angle), 1)), 'r--', label='0 radian')
 
         plt.xlabel('episodes')
         plt.ylabel('pole angle')

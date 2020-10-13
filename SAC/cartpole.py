@@ -235,6 +235,7 @@ class CartPoleEnvPos(CartPoleEnv):
     def __init__(self, mode='train'):
         super().__init__()
         self.mode = mode
+        self.tau = 0.01
 
     def step(self, action):
         # err_msg = "%r (%s) invalid" % (action, type(action))
@@ -274,8 +275,8 @@ class CartPoleEnvPos(CartPoleEnv):
         done = bool(
             x < -self.x_threshold
             or x > self.x_threshold
-            or theta < -self.theta_threshold_radians
-            or theta > self.theta_threshold_radians
+            # or theta < -self.theta_threshold_radians
+            # or theta > self.theta_threshold_radians
         )
 
         if not done:
@@ -354,7 +355,7 @@ class CartPoleEnvPos(CartPoleEnv):
             self.viewer.add_geom(self.track)
             pos_des_in_world = self.pos_desired * scale + screen_width / 2.0
             self.pos_flag = rendering.Line((pos_des_in_world, carty),
-                                           (pos_des_in_world, 2*carty))
+                                        (pos_des_in_world, 2*carty))
             self.viewer.add_geom(self.pos_flag)
 
             self._pole_geom = pole
@@ -381,15 +382,23 @@ if __name__ == "__main__":
     import time
     
     env = CartPoleEnvPos(mode='train')
-    observation = env.reset()
     counter = 0
-    while True:
-        action = env.action_space.sample()
-        observation_, _, _, _ = env.step(action)
-        if (counter + 1) % 500 == 0:
-            print(f'Flag position = {env.pos_desired}')
-            print(f'Carts position = {env.pos_desired - observation_[0]}')
-            print(f'Position difference = {observation_[0]}')
-            counter = 0
-        env.render()
-        counter += 1
+    n_games = 400
+    for n in range(n_games):
+        done = False
+        observation = env.reset()
+        while not done:
+            action = env.action_space.sample()
+            observation_, reward, done, _ = env.step(action)
+            if (counter + 1) % 700 == 0:
+                print(f'Flag position = {env.pos_desired}')
+                print(f'Carts position = {env.pos_desired - observation_[0]}')
+                print(f'Position difference = {observation_[0]}')
+                counter = 0
+            if abs(observation_[0]) < 0.01:
+                time.sleep(5)
+                print(f'Here error is {observation_[0]}')
+                print(f'Reward is {reward}')
+            env.render()
+            counter += 1
+        env.close()
