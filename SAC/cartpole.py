@@ -230,19 +230,21 @@ class CartPoleEnv(gym.Env):
             self.viewer = None
 
 
-class CartPoleEnvPos(CartPoleEnv):
+class CartPoleEnvState(CartPoleEnv):
 
     def __init__(self, mode='train'):
         super().__init__()
         self.mode = mode
         self.tau = 0.01
+        self.theta_threshold_radians = 12 * 2 * math.pi / 360
 
     def step(self, action):
         # err_msg = "%r (%s) invalid" % (action, type(action))
         # assert self.action_space.contains(action), err_msg
 
-        x_error, x_dot, theta, theta_dot = self.state
+        x_error, x_dot, theta_error, theta_dot = self.state
         x = self.pos_desired - x_error
+        theta = self.theta_desired - theta_error
         force = action[0] * self.force_mag
         costheta = math.cos(theta)
         sintheta = math.sin(theta)
@@ -269,26 +271,27 @@ class CartPoleEnvPos(CartPoleEnv):
             theta = theta + self.tau * theta_dot
 
         x_error = self.pos_desired - x
+        theta_error = self.theta_desired - theta
 
-        self.state = (x_error, x_dot, theta, theta_dot)
+        self.state = (x_error, x_dot, theta_error, theta_dot)
 
         done = bool(
             x < -self.x_threshold
             or x > self.x_threshold
-            # or theta < -self.theta_threshold_radians
-            # or theta > self.theta_threshold_radians
+            or theta < -self.theta_threshold_radians
+            or theta > self.theta_threshold_radians
         )
 
         if not done:
             # reward = np.exp(-((theta-self.theta_desired)**2
             #                   + (x_error**2)))
-            reward = np.exp(-(x_error**2))
+            reward = np.exp(-(x_error**2)) + np.exp(-(theta_error**2))
         elif self.steps_beyond_done is None:
             # Pole just fell!
             self.steps_beyond_done = 0
             # reward = np.exp(-((theta-self.theta_desired)**2
             #                   + (x_error**2)))
-            reward = np.exp(-(x_error**2))
+            reward = np.exp(-(x_error**2)) + np.exp(-(theta_error**2))
         else:
             if self.steps_beyond_done == 0:
                 logger.warn(
@@ -310,8 +313,8 @@ class CartPoleEnvPos(CartPoleEnv):
         if self.mode == 'train':
             self.pos_desired = self.np_random.uniform(low=-self.x_threshold,
                                                       high=self.x_threshold)
-
         self.state[0] = self.pos_desired - self.state[0]
+        self.state[2] = self.theta_desired - self.state[2]
         self.steps_beyond_done = None
         return np.array(self.state)
 
@@ -381,7 +384,7 @@ class CartPoleEnvPos(CartPoleEnv):
 if __name__ == "__main__":
     import time
     
-    env = CartPoleEnvPos(mode='train')
+    env = CartPoleEnvState(mode='train')
     counter = 0
     n_games = 400
     for n in range(n_games):
