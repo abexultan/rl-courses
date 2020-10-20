@@ -358,7 +358,7 @@ class CartPoleEnvState(CartPoleEnv):
             self.viewer.add_geom(self.track)
             pos_des_in_world = self.pos_desired * scale + screen_width / 2.0
             self.pos_flag = rendering.Line((pos_des_in_world, carty),
-                                        (pos_des_in_world, 2*carty))
+                                           (pos_des_in_world, 2*carty))
             self.viewer.add_geom(self.pos_flag)
 
             self._pole_geom = pole
@@ -381,9 +381,114 @@ class CartPoleEnvState(CartPoleEnv):
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
 
+class CartPoleEnvFullState(CartPoleEnvState):
+
+    def __init__(self, mode, k1=1, k2=1, k3=1, k4=1):
+        super().__init__(mode=mode)
+        self.theta_dot_desired = 0
+        self.pos_dot_desired = 0
+        self.k1 = k1
+        self.k2 = k2
+        self.k3 = k3
+        self.k4 = k4
+
+    def step(self, action):
+        # err_msg = "%r (%s) invalid" % (action, type(action))
+        # assert self.action_space.contains(action), err_msg
+
+        x_error, x_dot_error, theta_error, theta_dot_error = self.state
+        x = self.pos_desired - x_error
+        x_dot = self.pos_dot_desired - x_dot_error
+        theta = self.theta_desired - theta_error
+        theta_dot = self.theta_dot_desired - theta_dot_error
+        force = action[0] * self.force_mag
+        costheta = math.cos(theta)
+        sintheta = math.sin(theta)
+
+        # For the interested reader:
+        # https://coneural.org/florian/papers/05_cart_pole.pdf
+        temp = (force + self.polemass_length * theta_dot ** 2 * sintheta) /\
+            self.total_mass
+        thetaacc = (self.gravity * sintheta - costheta * temp) /\
+            (self.length * (4.0 / 3.0 - self.masspole * costheta ** 2 /
+                            self.total_mass))
+        xacc = temp - self.polemass_length * thetaacc * costheta /\
+            self.total_mass
+
+        if self.kinematics_integrator == 'euler':
+            x = x + self.tau * x_dot
+            x_dot = x_dot + self.tau * xacc
+            theta = theta + self.tau * theta_dot
+            theta_dot = theta_dot + self.tau * thetaacc
+        else:  # semi-implicit euler
+            x_dot = x_dot + self.tau * xacc
+            x = x + self.tau * x_dot
+            theta_dot = theta_dot + self.tau * thetaacc
+            theta = theta + self.tau * theta_dot
+
+        x_error = self.pos_desired - x
+        x_dot_error = self.pos_dot_desired - x_dot
+        theta_error = self.theta_desired - theta
+        theta_dot_error = self.theta_dot_desired - theta_dot
+
+        self.state = (x_error, x_dot_error, theta_error, theta_dot_error)
+
+        done = bool(
+            x < -self.x_threshold
+            or x > self.x_threshold
+            or theta < -self.theta_threshold_radians
+            or theta > self.theta_threshold_radians
+        )
+
+        if not done:
+            # reward = np.exp(-((theta-self.theta_desired)**2
+            #                   + (x_error**2)))
+            reward = self.k1 * np.exp(-(x_error**2)) +\
+                self.k2 * np.exp(-(x_dot_error**2)) +\
+                self.k3 * np.exp(-(theta_error**2)) +\
+                self.k4 * np.exp(-(theta_dot_error**2))
+
+        elif self.steps_beyond_done is None:
+            # Pole just fell!
+            self.steps_beyond_done = 0
+            # reward = np.exp(-((theta-self.theta_desired)**2
+            #                   + (x_error**2)))
+            reward = self.k1 * np.exp(-(x_error**2)) +\
+                self.k2 * np.exp(-(x_dot_error**2)) +\
+                self.k3 * np.exp(-(theta_error**2)) +\
+                self.k4 * np.exp(-(theta_dot_error**2))
+        else:
+            if self.steps_beyond_done == 0:
+                logger.warn(
+                    "You are calling 'step()' even though this "
+                    "environment has already returned done = True. You "
+                    "should always call 'reset()' once you receive 'done = "
+                    "True' -- any further steps are undefined behavior."
+                )
+            self.steps_beyond_done += 1
+            reward = 0.0
+
+        return np.array(self.state), reward, done, {}
+
+    def reset(self):
+        self.state = self.np_random.uniform(low=-self.theta_threshold_radians,
+                                            high=self.theta_threshold_radians,
+                                            size=(4,))
+
+        if self.mode == 'train':
+            self.pos_desired = self.np_random.uniform(low=-self.x_threshold,
+                                                      high=self.x_threshold)
+        self.state[0] = self.pos_desired - self.state[0]
+        self.state[1] = self.pos_dot_desired - self.state[1]
+        self.state[2] = self.theta_desired - self.state[2]
+        self.state[3] = self.theta_dot_desired - self.state[3]
+        self.steps_beyond_done = None
+        return np.array(self.state)
+
+
 if __name__ == "__main__":
     import time
-    
+
     env = CartPoleEnvState(mode='train')
     counter = 0
     n_games = 400
