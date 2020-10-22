@@ -1,7 +1,7 @@
 import numpy as np
 from agent import Agent
 import time
-from cartpole import CartPoleEnvFullState
+from cartpole import CartPoleEnvFullStateSwingUp as myEnv
 import matplotlib.pyplot as plt
 import argparse
 
@@ -11,10 +11,10 @@ if __name__ == '__main__':
     parser.add_argument("--tau", type=float, help="Need a floating number")
     parser.add_argument("--theta_threshold", type=float,
                         help="Need a floating number")
-    parser.add_argument("--k1", type=int)
-    parser.add_argument("--k2", type=int)
-    parser.add_argument("--k3", type=int)
-    parser.add_argument("--k4", type=int)
+    parser.add_argument("--k1", type=float)
+    parser.add_argument("--k2", type=float)
+    parser.add_argument("--k3", type=float)
+    parser.add_argument("--k4", type=float)
     args = parser.parse_args()
     delta_t = args.tau
     theta_threshold = args.theta_threshold
@@ -23,13 +23,13 @@ if __name__ == '__main__':
     k3 = args.k3
     k4 = args.k4
 
-    env_id = 'BalancePoll_deltat_' + str(delta_t) + '_theta_threshold_'\
+    env_id = 'SwingUp_deltat_' + str(delta_t) + '_theta_threshold_'\
         + str(theta_threshold) + '_k1_' + str(k1) + '_k2_' + str(k2)\
         + '_k3_' + str(k3) + '_k4_' + str(k4)
 
     load_checkpoint = False
-    env = CartPoleEnvFullState(mode='test' if load_checkpoint else 'train',
-                               k1=k1, k2=k2, k3=k3, k4=k4)
+    env = myEnv(mode='test' if load_checkpoint else 'train',
+                k1=k1, k2=k2, k3=k3, k4=k4)
     env.tau = delta_t
     env.theta_threshold_radians = theta_threshold
 
@@ -99,7 +99,8 @@ if __name__ == '__main__':
 
     if load_checkpoint:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
-        fig.suptitle(f'Delta_t = {delta_t}, threshold = {theta_threshold}')
+        fig.suptitle(f'Delta_t = {delta_t}, threshold = {theta_threshold}' +
+                     f' k1 = {k1}, k2 = {k2}, k3 = {k3}, k4 = {k4}')
         ax1.plot(angle, label='pole angle')
         ax1.plot(np.zeros((len(angle), 1)), 'r--', label='0 radian')
 
