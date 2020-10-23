@@ -1,7 +1,7 @@
 import numpy as np
 from agent import Agent
 import time
-from cartpole_swingup import CartPoleSwingUpV0
+from cartpole_swingup import CartPoleSwingUpV0, CartPoleSwingUpPos
 # import matplotlib.pyplot as plt
 import argparse
 
@@ -9,13 +9,20 @@ import argparse
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Pass values")
     parser.add_argument("--tau", type=float, help="Need a floating number")
+    parser.add_argument("--theta_threshold", type=float)
+    parser.add_argument("--k1", type=float)
     args = parser.parse_args()
     delta_t = args.tau
-    env_id = 'SwingUp_deltat_' + str(delta_t)
+    theta_threshold = args.theta_threshold
+    k1 = args.k1
+    env_id = 'SwingUp_deltat_' + str(delta_t) + '_theta_threshold_'\
+        + str(theta_threshold) + '_k1_' + str(k1)
 
     load_checkpoint = False
-    env = CartPoleSwingUpV0()
-    env.tau = delta_t
+    mode = 'test' if load_checkpoint else 'train'
+    env = CartPoleSwingUpPos(tau=delta_t, mode=mode,
+                             theta_threshold=theta_threshold,
+                             k1=k1)
 
     agent = Agent(alpha=0.0003, beta=0.0003, reward_scale=2,
                   env_id=env_id, input_dims=env.observation_space.shape,
@@ -33,7 +40,7 @@ if __name__ == '__main__':
         thetas = []
 
     n_games = 1 if load_checkpoint else 800
-    max_steps = 500 if load_checkpoint else 1000 * int(0.01 // delta_t)
+    max_steps = 500 if load_checkpoint else 1500 * int(0.01 // delta_t)
 
     filename = env_id + '_' + str(n_games) + 'games_scale' + '_' + \
         str(agent.scale) + '.png'

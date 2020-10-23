@@ -74,7 +74,7 @@ class CartPoleSwingUpEnv(gym.Env):
         self.seed()
         self.viewer = None
         self.state = None
-
+        
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
@@ -179,6 +179,83 @@ class CartPoleSwingUpV1(CartPoleSwingUpEnv):
     @staticmethod
     def _reward_fn(state, action, next_state):
         return (1 + np.cos(next_state.theta, dtype=np.float32)) / 2
+
+
+class CartPoleSwingUpPos(CartPoleSwingUpEnv):
+    
+    def __init__(self, tau=0.01, mode='train', pos_desired=1.5,
+                 theta_threshold=20, k1=5):
+        super().__init__(tau=tau)
+        self.pos_desired = pos_desired
+        self.mode = mode
+        self.theta_threshold = theta_threshold * np.pi / 180
+        self.k1 = k1
+
+    def reset(self):
+        self.state = State(
+            *self.np_random.normal(
+                loc=np.array([0.0, 0.0, np.pi, 0.0]),
+                scale=np.array([0.2, 0.2, 0.2, 0.2]),
+            ).astype(np.float32)
+        )
+        if self.mode == 'train':
+            self.pos_desired =\
+                 self.np_random.uniform(low=-self.params.x_threshold,
+                                        high=self.params.x_threshold)
+
+        self.state = self.state._replace(x_pos=(self.pos_desired -
+                                                self.state.x_pos))
+        return self._get_obs(self.state)
+
+    def _transition_fn(self, state, action):
+        # pylint: disable=no-member
+        action = action[0] * self.params.forcemag
+
+        sin_theta = np.sin(state.theta)
+        cos_theta = np.cos(state.theta)
+
+        xdot_update = (
+            -2 * self.params.mpl * (state.theta_dot ** 2) * sin_theta
+            + 3 * self.params.pole.mass * self.params.gravity
+                * sin_theta * cos_theta
+            + 4 * action
+            - 4 * self.params.friction * state.x_dot
+        ) / (4 * self.params.masstotal - 3 * self.params.pole.mass *
+             cos_theta ** 2)
+        thetadot_update = (
+            -3 * self.params.mpl * (state.theta_dot ** 2) * sin_theta *
+            cos_theta
+            + 6 * self.params.masstotal * self.params.gravity * sin_theta
+            + 6 * (action - self.params.friction * state.x_dot) * cos_theta
+        ) / (
+            4 * self.params.pole.length * self.params.masstotal
+            - 3 * self.params.mpl * cos_theta ** 2
+        )
+
+        delta_t = self.params.deltat
+
+        return State(
+            x_pos=self.pos_desired - ((self.pos_desired - state.x_pos)
+                                      + state.x_dot * delta_t),
+            theta=state.theta + state.theta_dot * delta_t,
+            x_dot=state.x_dot + xdot_update * delta_t,
+            theta_dot=state.theta_dot + thetadot_update * delta_t,
+        )
+
+    def _reward_fn(self, state, action, next_state):
+        theta_rew = np.cos(next_state.theta, dtype=np.float32)
+        pos_rew = self.k1 * np.exp(-(next_state.x_pos**2))
+
+        if abs(next_state.theta) < self.theta_threshold:
+            reward = theta_rew + pos_rew
+        else:
+            reward = theta_rew
+
+        return reward
+
+    def _terminal(self, state):
+        x_pos = self.pos_desired - state.x_pos
+        return bool(abs(x_pos) > self.params.x_threshold)
 
 
 Screen = namedtuple("Screen", "width height")
